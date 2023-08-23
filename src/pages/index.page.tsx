@@ -1,12 +1,21 @@
-import SearchIcon from "@mui/icons-material/Search";
-import AddIcon from "@mui/icons-material/Add";
 import { useRouter } from "next/router";
+import Divider from "@components/divider.component";
+import FloatingButton from "@components/floating-button.component";
+import SearchBar from "@components/search-bar.component";
+import {
+  useAddContactWithPhonesMutation,
+  useGetContactListQuery,
+} from "@api/generated";
 
 const Home = () => {
   const router = useRouter();
 
+  const { loading, error, data } = useGetContactListQuery();
+  const [addTodo, { data: aDASD, loading: ASDSA, error: ASDASD }] =
+    useAddContactWithPhonesMutation();
+
   const handleAddContactButton = () => {
-    // router.push("/contact/new");
+    router.push("/contact/new");
   };
 
   return (
@@ -17,142 +26,67 @@ const Home = () => {
         width: "100%",
         flexDirection: "column",
         justifyContent: "center",
-        maxWidth: "800px",
+        alignItems: "center",
       }}
     >
       <div
         css={{
           boxSizing: "border-box",
+          width: "100%",
           display: "flex",
           flexWrap: "wrap",
           flexDirection: "row",
           paddingBottom: "10px",
+          maxWidth: "800px",
         }}
       >
-        <div
-          css={{
-            border: "1px solid black",
-            borderRadius: "10px",
-            display: "flex",
-            alignItems: "center",
-            width: "100%",
-            padding: "2% 3%",
-          }}
-        >
-          <input
-            css={{
-              font: "inherit",
-              marginRight: "5px",
-              flex: 1,
-              padding: "5px 2px",
-              border: 0,
-              background: "none",
-              display: "block",
-            }}
-            placeholder="Search"
-            aria-label="search"
-          />
-          <SearchIcon css={{ fontSize: "1.2em" }} />
-        </div>
+        <SearchBar />
       </div>
       <div
         css={{
           boxSizing: "border-box",
+          width: "100%",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
+          overflowX: "auto",
+          maxWidth: "800px",
         }}
       >
-        <div
-          css={{
-            boxSizing: "border-box",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            css={{
-              boxSizing: "border-box",
-            }}
-          >
-            Lucio
-          </div>
-          <div
-            css={{
-              boxSizing: "border-box",
-            }}
-          >
-            0821
-          </div>
-        </div>
-        <div
-          css={{
-            display: "flex",
-            flexShrink: 0,
-            borderWidth: 0,
-            borderStyle: "solid",
-            borderColor: "rgba(0,0,0,0.12)",
-            borderBottomWidth: "thin",
-          }}
-        />
-        <div
-          css={{
-            boxSizing: "border-box",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
-          <div
-            css={{
-              boxSizing: "border-box",
-            }}
-          >
-            Lucio
-          </div>
-          <div
-            css={{
-              boxSizing: "border-box",
-            }}
-          >
-            0821
-          </div>
-        </div>
+        {data ? (
+          data.contact.map((item, key) => (
+            <div
+              css={{
+                boxSizing: "border-box",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+              key={key}
+            >
+              <div
+                css={{
+                  boxSizing: "border-box",
+                }}
+              >
+                {item.first_name}
+              </div>
+              <div
+                css={{
+                  boxSizing: "border-box",
+                }}
+              >
+                {item.phones[0].number}
+              </div>
+              <Divider />
+            </div>
+          ))
+        ) : (
+          <span />
+        )}
       </div>
-      <button
-        aria-label="add"
-        onClick={handleAddContactButton}
-        css={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxSizing: "border-box",
-          outline: "0",
-          border: "0",
-          margin: "0",
-          cursor: "pointer",
-          userSelect: "none",
-          verticalAlign: "middle",
-          textDecoration: "none",
-          transition:
-            "background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,border-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms",
-          borderRadius: "50%",
-          padding: 0,
-          width: "60px",
-          height: "60px",
-          zIndex: "1050",
-          boxShadow:
-            "0px 3px 5px -1px rgba(0,0,0,0.2), 0px 6px 10px 0px rgba(0,0,0,0.14), 0px 1px 18px 0px rgba(0,0,0,0.12)",
-          color: "white",
-          backgroundColor: "#1976d2",
-          position: "absolute",
-          right: 15,
-          bottom: 15,
-        }}
-      >
-        <AddIcon />
-      </button>
+      <FloatingButton onClick={handleAddContactButton} />
     </div>
   );
 };

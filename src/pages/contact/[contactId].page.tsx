@@ -3,7 +3,7 @@ import React from "react";
 
 const ContactDetail = () => {
   const router = useRouter();
-  const { SPMId } = router.query;
+  const { contactId } = router.query;
   return <div>ContactDetail</div>;
 };
 

@@ -13,6 +13,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import React from "react";
 import { useRouter } from "next/router";
+import { useGetContactListQuery } from "@api/generated";
 
 const Contact = () => {
   const router = useRouter();

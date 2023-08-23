@@ -1,9 +1,15 @@
+import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 import { ThemeProvider, createTheme } from "@mui/material";
 import type { AppProps } from "next/app";
 import { Inter } from "next/font/google";
 import Head from "next/head";
 
 const inter = Inter({ subsets: ["latin"] });
+
+const client = new ApolloClient({
+  uri: "https://wpe-hiring.tokopedia.net/graphql",
+  cache: new InMemoryCache(),
+});
 
 const theme = createTheme({
   typography: {
@@ -21,7 +27,9 @@ export default function App({ Component, pageProps }: AppProps) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <Component {...pageProps} />
+      <ApolloProvider client={client}>
+        <Component {...pageProps} />
+      </ApolloProvider>
     </ThemeProvider>
   );
 }
