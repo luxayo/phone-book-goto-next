@@ -1,93 +1,115 @@
-import {
-  Box,
-  Divider,
-  Fab,
-  Grid,
-  IconButton,
-  Input,
-  InputBase,
-  Paper,
-  Typography,
-} from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import AddIcon from "@mui/icons-material/Add";
-import React from "react";
 import { useRouter } from "next/router";
+import Divider from "@components/divider.component";
+import FloatingButton from "@components/floating-button.component";
+import SearchBar from "@components/search-bar.component";
 import { useGetContactListQuery } from "@api/generated";
+import { useEffect, useState } from "react";
+import { usePhoneList } from "@/lib/local-storage.lib";
 
 const Contact = () => {
   const router = useRouter();
+  const [limit, setLimit] = useState(10);
+  const [offset, setOffset] = useState(0);
+
+  const { loading, error, data, refetch } = useGetContactListQuery({
+    variables: {
+      limit: limit,
+      offset: offset,
+    },
+  });
+
+  const [phoneList, setPhoneList] = usePhoneList();
+
+  useEffect(() => {
+    if (data) {
+      if (phoneList) {
+        setPhoneList((prev) => prev?.contact.concat(data));
+      } else {
+        setPhoneList(data);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
+
+  const handleContactButton = (id: number) => {
+    router.push(`/contact/${id}`);
+  };
 
   const handleAddContactButton = () => {
-    // router.push("/contact/new");
+    router.push("/contact/new");
   };
 
   return (
-    <Grid
-      container
-      direction="column"
-      justifyContent="center"
-      spacing={1}
-      maxWidth="800px"
+    <div
+      css={{
+        boxSizing: "border-box",
+        display: "flex",
+        width: "100%",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
     >
-      <Grid container item>
-        <Box
-          sx={{
-            padding: "0",
-            border: "1px solid black",
-            borderRadius: "10px",
-            display: "flex",
-            alignItems: "center",
-            width: "100%",
-          }}
-        >
-          <InputBase
-            sx={{
-              ml: 1,
-              flex: 1,
-            }}
-            placeholder="Search"
-            inputProps={{ "aria-label": "search" }}
-          />
-          <IconButton
-            type="button"
-            sx={{
-              p: "10px",
-            }}
-            aria-label="search"
-          >
-            <SearchIcon />
-          </IconButton>
-        </Box>
-      </Grid>
-      <Grid container direction="column" item spacing={1}>
-        <Grid container direction="column" item>
-          <Grid item>
-            <Typography>Lucio</Typography>
-          </Grid>
-          <Grid item>
-            <Typography>0821</Typography>
-          </Grid>
-        </Grid>
-        <Divider />
-        <Grid container direction="column" item>
-          <Grid item>
-            <Typography>Lucio</Typography>
-          </Grid>
-          <Grid item>
-            <Typography>0821</Typography>
-          </Grid>
-        </Grid>
-      </Grid>
-      <Fab
-        color="primary"
-        aria-label="add"
-        onClick={handleAddContactButton}
-        sx={{ position: "absolute", right: 15, bottom: 15 }}
+      <div
+        css={{
+          boxSizing: "border-box",
+          width: "100%",
+          display: "flex",
+          flexWrap: "wrap",
+          flexDirection: "row",
+          paddingBottom: "10px",
+          maxWidth: "800px",
+        }}
       >
-        <AddIcon />
-      </Fab>
-    </Grid>
+        <SearchBar />
+      </div>
+      <div
+        css={{
+          boxSizing: "border-box",
+          width: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          overflowX: "auto",
+          maxWidth: "800px",
+        }}
+      >
+        {data ? (
+          data.contact.map((item, key) => (
+            <div
+              css={{
+                boxSizing: "border-box",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+              key={key}
+              onClick={() => handleContactButton(item.id)}
+            >
+              <div
+                css={{
+                  boxSizing: "border-box",
+                }}
+              >
+                {item.first_name}
+              </div>
+              <div
+                css={{
+                  boxSizing: "border-box",
+                }}
+              >
+                {item.phones[0].number}
+              </div>
+              <Divider />
+            </div>
+          ))
+        ) : (
+          <span />
+        )}
+      </div>
+      <FloatingButton onClick={handleAddContactButton} />
+    </div>
   );
 };
 
