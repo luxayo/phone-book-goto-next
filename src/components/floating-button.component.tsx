@@ -13,12 +13,12 @@ const FloatingButton = (
         display: "flex",
         margin: "0 auto",
         marginBottom: "50px",
-        maxWidth: "800px",
+        maxWidth: "700px",
         position: "absolute",
         justifyContent: "flex-end",
         top: "90%",
         zIndex: "1000",
-        width: "90%",
+        width: "85%",
       }}
     >
       <button

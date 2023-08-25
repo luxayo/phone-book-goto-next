@@ -7,15 +7,10 @@ import Divider from "@components/divider.component";
 import CheckIcon from "@mui/icons-material/Check";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useRouter } from "next/router";
-import React, { useEffect } from "react";
-import { SubmitHandler, useFieldArray, useForm } from "react-hook-form";
+import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
-
-interface IFormInput {
-  first_name: string;
-  last_name: string;
-  phones: { number: string }[];
-}
+import PhoneNotFound from "@components/phone-not-found.component";
+import PhoneNumberAdd from "@components/phone-number-add.component";
 
 const ContactDetail = () => {
   const router = useRouter();
@@ -24,17 +19,23 @@ const ContactDetail = () => {
     typeof contactId === "string" ? contactId : ""
   );
 
+  const [isNotFound, setIsNotFound] = useState(false);
+  const [isAddingPhoneNumber, setIsAddingPhoneNumber] = useState(false);
+
+  const [phoneInitialValues, setphoneInitialValues] = useState({
+    first_name: "",
+    last_name: "",
+    phones: [{ number: "" }],
+  });
+
   const [editContact, { loading: loadingContact }] =
     useEditContactByIdMutation();
   const [editPhoneNumber, { loading: loadingPhoneNumber }] =
     useEditPhoneNumberMutation();
 
   const formik = useFormik({
-    initialValues: {
-      first_name: "",
-      last_name: "",
-      phones: [{ number: "" }],
-    },
+    initialValues: phoneInitialValues,
+    enableReinitialize: true,
     onSubmit: (values) => {
       editContact({
         variables: {
@@ -48,7 +49,8 @@ const ContactDetail = () => {
         },
       })
         .then((response) => {
-          router.replace(`/contact`);
+          alert("ok contact");
+          // router.replace(`/contact`);
         })
         .catch((error) => {
           alert(error.message);
@@ -60,26 +62,32 @@ const ContactDetail = () => {
     router.push("/contact");
   };
 
-  const handleSaveButton = () => {
+  const handleSaveContact = () => {
     formik.handleSubmit();
+    router.push("/contact");
   };
 
   const handleAddPhone = () => {
-    const phones = formik.values.phones;
-    console.log(phones.length);
-    phones.push({ number: "" });
-    formik.setFieldValue("phones", phones);
+    setIsAddingPhoneNumber(true);
   };
 
-  const handleRemovePhone = (phone: { number: string }) => {
-    formik.setFieldValue(
-      "phones",
-      formik.values.phones.filter((data) => data !== phone)
-    );
-  };
-
-  const onSubmit: SubmitHandler<IFormInput> = (data) => {
-    console.log(data);
+  const handleSavePhoneNumber = (phone: { number: string }, index: number) => {
+    editPhoneNumber({
+      variables: {
+        pk_columns: {
+          number: formik.initialValues.phones[index].number,
+          contact_id: parsedContactId,
+        },
+        new_phone_number: phone.number,
+      },
+    })
+      .then((response) => {
+        alert("ok phone");
+        // router.replace(`/contact`);
+      })
+      .catch((error) => {
+        alert(error.message);
+      });
   };
 
   const {
@@ -96,12 +104,15 @@ const ContactDetail = () => {
       formik.values.first_name === "" &&
       formik.values.first_name === ""
     ) {
-      formik.setFieldValue("first_name", data.contact_by_pk!.first_name);
-      formik.setFieldValue("last_name", data.contact_by_pk!.last_name);
-      formik.setFieldValue(
-        "phones",
-        data.contact_by_pk!.phones.map((data) => data.number)
-      );
+      if (data.contact_by_pk !== null && data.contact_by_pk !== undefined) {
+        setphoneInitialValues({
+          first_name: data.contact_by_pk.first_name,
+          last_name: data.contact_by_pk.last_name,
+          phones: data.contact_by_pk.phones,
+        });
+      } else {
+        setIsNotFound(true);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
@@ -121,6 +132,13 @@ const ContactDetail = () => {
         alignItems: "center",
       }}
     >
+      <PhoneNotFound isActive={isNotFound} id={parsedContactId} />
+      <PhoneNumberAdd
+        isActive={isAddingPhoneNumber}
+        setIsActive={setIsAddingPhoneNumber}
+        setValue={formik.setValues}
+        id={parsedContactId}
+      />
       <div
         css={{
           boxSizing: "border-box",
@@ -169,7 +187,7 @@ const ContactDetail = () => {
               cursor: "pointer",
               boxSizing: "border-box",
             }}
-            onClick={handleSaveButton}
+            onClick={handleSaveContact}
           >
             <CheckIcon
               css={{
@@ -201,6 +219,7 @@ const ContactDetail = () => {
           <input
             id="first_name"
             value={formik.values.first_name}
+            onBlur={handleSaveContact}
             onChange={formik.handleChange}
             css={{
               font: "inherit",
@@ -228,6 +247,7 @@ const ContactDetail = () => {
           <input
             id="last_name"
             value={formik.values.last_name}
+            onBlur={handleSaveContact}
             onChange={formik.handleChange}
             css={{
               font: "inherit",
@@ -257,6 +277,9 @@ const ContactDetail = () => {
             <input
               id={`phones.${index}.number`}
               value={phone.number}
+              onBlur={() => {
+                handleSavePhoneNumber(phone, index);
+              }}
               onChange={formik.handleChange}
               css={{
                 font: "inherit",
@@ -271,22 +294,10 @@ const ContactDetail = () => {
               placeholder="Phone"
               aria-label="phone"
             />
-            {formik.values.phones.length > 1 ? (
-              <button
-                onClick={() =>
-                  formik.values.phones.length > 1 && handleRemovePhone(phone)
-                }
-              >
-                Remove Field Phone
-              </button>
-            ) : (
-              <span />
-            )}
           </div>
         ))}
-        <Divider />
-
         <button onClick={handleAddPhone}>Add Field Phone</button>
+        <Divider />
       </div>
     </div>
   );

@@ -43,7 +43,7 @@ const NewContact = () => {
   };
 
   const handleSaveButton = () => {
-    formik.handleSubmit;
+    formik.handleSubmit();
   };
 
   const handleAddPhone = () => {

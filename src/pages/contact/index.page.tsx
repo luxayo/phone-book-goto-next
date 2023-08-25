@@ -1,35 +1,40 @@
+"use client";
 import { useRouter } from "next/router";
 import Divider from "@components/divider.component";
 import FloatingButton from "@components/floating-button.component";
 import SearchBar from "@components/search-bar.component";
-import { useGetContactListQuery } from "@api/generated";
+import {
+  GetContactListQuery,
+  useGetContactListLazyQuery,
+} from "@api/generated";
 import { useEffect, useState } from "react";
-import { usePhoneList } from "@/lib/local-storage.lib";
 
 const Contact = () => {
   const router = useRouter();
   const [limit, setLimit] = useState(10);
   const [offset, setOffset] = useState(0);
+  const [search, setSearch] = useState("");
 
-  const { loading, error, data, refetch } = useGetContactListQuery({
-    variables: {
-      limit: limit,
-      offset: offset,
-    },
-  });
+  const [getContact, { loading, error }] = useGetContactListLazyQuery();
 
-  const [phoneList, setPhoneList] = usePhoneList();
+  const [phoneList, setPhoneList] = useState<GetContactListQuery | undefined>();
 
   useEffect(() => {
-    if (data) {
-      if (phoneList) {
-        setPhoneList((prev) => prev?.contact.concat(data));
-      } else {
-        setPhoneList(data);
-      }
+    if (!localStorage.getItem("phone")) {
+      console.log("baru");
+      getContact({
+        variables: { limit: limit, offset: offset },
+      }).then((response) => {
+        localStorage.setItem("phone", JSON.stringify(response.data));
+        setPhoneList(response.data);
+      });
+    } else {
+      console.log("ambil");
+      const data = localStorage.getItem("phone");
+      if (data) setPhoneList(JSON.parse(data));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+  }, []);
 
   const handleContactButton = (id: number) => {
     router.push(`/contact/${id}`);
@@ -37,6 +42,42 @@ const Contact = () => {
 
   const handleAddContactButton = () => {
     router.push("/contact/new");
+  };
+
+  const handleLoadMoreButton = () => {
+    setOffset((prev) => prev + 1);
+    getContact({
+      variables: { limit: limit, offset: offset },
+    }).then((response) => {
+      if (
+        phoneList !== undefined &&
+        phoneList !== null &&
+        response.data !== undefined
+      ) {
+        const temp = {
+          contact: phoneList.contact
+            .concat(response.data.contact)
+            .filter(function filterPhones(this: any, { id }) {
+              var key = id;
+              return !this.has(key) && this.add(key);
+            }, new Set()),
+        };
+        localStorage.setItem("phone", JSON.stringify(temp));
+        setPhoneList(temp);
+      }
+    });
+  };
+
+  const renderPhoneNumber = (
+    phones: {
+      __typename?: "phone" | undefined;
+      number: string;
+    }[]
+  ) => {
+    if (phones !== undefined) {
+      return phones.map((number, key) => <div key={key}>{number.number}</div>);
+    }
+    return <span>No Phone Number</span>;
   };
 
   return (
@@ -61,7 +102,7 @@ const Contact = () => {
           maxWidth: "800px",
         }}
       >
-        <SearchBar />
+        <SearchBar onChange={(e) => setSearch(e.target.value)} />
       </div>
       <div
         css={{
@@ -70,43 +111,57 @@ const Contact = () => {
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          overflowX: "auto",
+          overflowY: "auto",
+          maxHeight: "92vh",
           maxWidth: "800px",
         }}
       >
-        {data ? (
-          data.contact.map((item, key) => (
-            <div
-              css={{
-                boxSizing: "border-box",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                cursor: "pointer",
-              }}
-              key={key}
-              onClick={() => handleContactButton(item.id)}
-            >
+        {phoneList ? (
+          phoneList.contact
+            .filter(
+              (phone) =>
+                phone.first_name.toLowerCase().includes(search) ||
+                phone.last_name.toLowerCase().includes(search) ||
+                (phone.phones !== undefined
+                  ? phone.phones.find((number) =>
+                      number.number.includes(search)
+                    )
+                  : false)
+            )
+            .map((item, key) => (
               <div
                 css={{
                   boxSizing: "border-box",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  cursor: "pointer",
                 }}
+                key={key}
+                onClick={() => handleContactButton(item.id)}
               >
-                {item.first_name}
+                <div
+                  css={{
+                    boxSizing: "border-box",
+                  }}
+                >
+                  {item.first_name}
+                </div>
+                <div
+                  css={{
+                    boxSizing: "border-box",
+                  }}
+                >
+                  {renderPhoneNumber(item.phones)}
+                </div>
+                <Divider />
               </div>
-              <div
-                css={{
-                  boxSizing: "border-box",
-                }}
-              >
-                {item.phones[0].number}
-              </div>
-              <Divider />
-            </div>
-          ))
+            ))
         ) : (
           <span />
         )}
+
+        <button onClick={handleLoadMoreButton}>Load More</button>
       </div>
       <FloatingButton onClick={handleAddContactButton} />
     </div>
