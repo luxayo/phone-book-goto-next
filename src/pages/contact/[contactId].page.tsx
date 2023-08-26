@@ -4,8 +4,7 @@ import {
   useGetContactDetailQuery,
 } from "@api/generated";
 import Divider from "@components/divider.component";
-import CheckIcon from "@mui/icons-material/Check";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { AiOutlineCheck, AiOutlineArrowLeft } from "react-icons/ai";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
@@ -147,7 +146,7 @@ const ContactDetail = () => {
           flexWrap: "wrap",
           flexDirection: "row",
           paddingBottom: "10px",
-          maxWidth: "800px",
+          maxWidth: "500px",
         }}
       >
         <div
@@ -166,7 +165,7 @@ const ContactDetail = () => {
             }}
             onClick={handleBackButton}
           >
-            <ArrowBackIcon
+            <AiOutlineArrowLeft
               css={{
                 fontSize: "2em",
               }}
@@ -189,7 +188,7 @@ const ContactDetail = () => {
             }}
             onClick={handleSaveContact}
           >
-            <CheckIcon
+            <AiOutlineCheck
               css={{
                 fontSize: "2em",
               }}
@@ -205,7 +204,7 @@ const ContactDetail = () => {
           flexDirection: "column",
           justifyContent: "center",
           overflowX: "auto",
-          maxWidth: "800px",
+          maxWidth: "500px",
         }}
       >
         <div

@@ -1,17 +1,70 @@
 import { useRouter } from "next/router";
 import Divider from "@components/divider.component";
-import CheckIcon from "@mui/icons-material/Check";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import {
+  AiOutlineCheck,
+  AiOutlineArrowLeft,
+  AiFillDelete,
+} from "react-icons/ai";
 import { useAddContactWithPhonesMutation } from "@api/generated";
-import { SubmitHandler, useFieldArray, useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
+import styled from "@emotion/styled";
 import { useFormik } from "formik";
+import { css } from "@emotion/react";
 
-interface IFormInput {
-  first_name: string;
-  last_name: string;
-  phones: { number: string }[];
-}
+const ContactContainer = css({
+  backgroundColor: "#404040",
+  margin: "8px 0",
+  borderRadius: "12px",
+  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+  width: "100%",
+});
+
+const AddPhoneButton = css({
+  width: "100%",
+  font: "inherit",
+  color: "white",
+  cursor: "pointer",
+  display: "flex",
+  flex: 1,
+  backgroundColor: "#404040",
+  border: "none",
+  padding: "5px 10px",
+  borderTop: "1px solid #333333",
+  borderRadius: "0 0 12px 12px",
+  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+  transition: "background-color 0.3s",
+  alignItems: "center",
+  "&:hover": {
+    backgroundColor: "#333333",
+  },
+});
+
+const RemovePhoneButton = css({
+  font: "inherit",
+  color: "white",
+  cursor: "pointer",
+  display: "flex",
+  backgroundColor: "transparent",
+  border: "none",
+  padding: "5px",
+  borderRadius: "50%",
+  transition: "color 0.2s",
+  alignItems: "center",
+  "&:hover": {
+    color: "#333333",
+  },
+});
+
+const ButtonText = css({
+  fontSize: ".7em",
+  width: "100%",
+  height: "auto",
+  textAlign: "center",
+});
+
+const ButtonIcon = css({
+  fontSize: "1em",
+  textAlign: "center",
+});
 
 const NewContact = () => {
   const router = useRouter();
@@ -59,6 +112,17 @@ const NewContact = () => {
     console.log(formik.values.phones.length);
   };
 
+  const isEmpty = () => {
+    if (
+      formik.values.first_name === "" &&
+      formik.values.last_name === "" &&
+      formik.values.phones.findIndex((phone) => phone.number.length > 0) === -1
+    )
+      return true;
+
+    return false;
+  };
+
   return (
     <div
       css={{
@@ -78,7 +142,7 @@ const NewContact = () => {
           flexWrap: "wrap",
           flexDirection: "row",
           paddingBottom: "10px",
-          maxWidth: "800px",
+          maxWidth: "500px",
         }}
       >
         <div
@@ -97,11 +161,13 @@ const NewContact = () => {
             }}
             onClick={handleBackButton}
           >
-            <ArrowBackIcon
+            <p
               css={{
-                fontSize: "2em",
+                fontSize: "1em",
               }}
-            />
+            >
+              Close
+            </p>
           </div>
         </div>
         <div
@@ -117,14 +183,18 @@ const NewContact = () => {
             css={{
               cursor: "pointer",
               boxSizing: "border-box",
+              pointerEvents: isEmpty() ? "none" : "visible",
             }}
             onClick={handleSaveButton}
           >
-            <CheckIcon
+            <p
               css={{
-                fontSize: "2em",
+                fontSize: "1em",
+                color: isEmpty() ? "#404040" : "white",
               }}
-            />
+            >
+              Done
+            </p>
           </div>
         </div>
       </div>
@@ -136,64 +206,10 @@ const NewContact = () => {
           flexDirection: "column",
           justifyContent: "center",
           overflowX: "auto",
-          maxWidth: "800px",
+          maxWidth: "500px",
         }}
       >
-        <div
-          css={{
-            boxSizing: "border-box",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-start",
-          }}
-        >
-          <input
-            id="first_name"
-            value={formik.values.first_name}
-            onChange={formik.handleChange}
-            css={{
-              font: "inherit",
-              marginRight: "5px",
-              flex: 1,
-              padding: "5px 2px",
-              border: "none",
-              background: "none",
-              display: "block",
-              outline: "none",
-            }}
-            placeholder="First Name"
-            aria-label="first-name"
-          />
-        </div>
-        <Divider />
-        <div
-          css={{
-            boxSizing: "border-box",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-start",
-          }}
-        >
-          <input
-            id="last_name"
-            value={formik.values.last_name}
-            onChange={formik.handleChange}
-            css={{
-              font: "inherit",
-              marginRight: "5px",
-              flex: 1,
-              padding: "5px 2px",
-              border: "none",
-              background: "none",
-              display: "block",
-              outline: "none",
-            }}
-            placeholder="Last Name"
-            aria-label="last-name"
-          />
-        </div>
-        <Divider />
-        {formik.values.phones.map((phone, index) => (
+        <div css={ContactContainer}>
           <div
             css={{
               boxSizing: "border-box",
@@ -201,15 +217,22 @@ const NewContact = () => {
               alignItems: "center",
               justifyContent: "flex-start",
             }}
-            key={index}
           >
             <input
-              id={`phones.${index}.number`}
-              value={phone.number}
-              onChange={formik.handleChange}
+              id="first_name"
+              value={formik.values.first_name}
+              onChange={(e) => {
+                e.preventDefault();
+                const { value } = e.target;
+                const regex = /[~`!@#$%^&*()_={}'"[\]:;,.<>+\/?-]/;
+                if (!value || !regex.test(value.toString())) {
+                  formik.setFieldValue(`first_name`, value);
+                }
+              }}
               css={{
+                color: "white",
                 font: "inherit",
-                marginRight: "5px",
+                margin: "5px",
                 flex: 1,
                 padding: "5px 2px",
                 border: "none",
@@ -217,24 +240,103 @@ const NewContact = () => {
                 display: "block",
                 outline: "none",
               }}
-              placeholder="Phone"
-              aria-label="phone"
+              placeholder="First Name"
+              aria-label="first-name"
             />
-            {formik.values.phones.length > 1 ? (
-              <button
-                onClick={() =>
-                  formik.values.phones.length > 1 && handleRemovePhone(phone)
-                }
-              >
-                Remove Field Phone
-              </button>
-            ) : (
-              <span />
-            )}
           </div>
-        ))}
-        <button onClick={handleAddPhone}>Add Field Phone</button>
-        <Divider />
+          <Divider />
+          <div
+            css={{
+              boxSizing: "border-box",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-start",
+            }}
+          >
+            <input
+              id="last_name"
+              value={formik.values.last_name}
+              onChange={(e) => {
+                e.preventDefault();
+                const { value } = e.target;
+                const regex = /[~`!@#$%^&*()_={}'"[\]:;,.<>+\/?-]/;
+                if (!value || !regex.test(value.toString())) {
+                  formik.setFieldValue(`last_name`, value);
+                }
+              }}
+              css={{
+                color: "white",
+                font: "inherit",
+                margin: "5px",
+                flex: 1,
+                padding: "5px 2px",
+                border: "none",
+                background: "none",
+                display: "block",
+                outline: "none",
+              }}
+              placeholder="Last Name"
+              aria-label="last-name"
+            />
+          </div>
+          <Divider />
+        </div>
+        <div css={ContactContainer}>
+          {formik.values.phones.map((phone, index) => (
+            <div
+              css={{
+                boxSizing: "border-box",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
+              }}
+              key={index}
+            >
+              <input
+                id={`phones.${index}.number`}
+                value={phone.number}
+                onChange={(e) => {
+                  e.preventDefault();
+                  const { value } = e.target;
+                  const regex =
+                    /^(0*[0-9][0-9]*(\.[0-9]*)?|0*\.[0-9]*[1-9][0-9]*)$/;
+                  if (!value || regex.test(value.toString())) {
+                    formik.setFieldValue(`phones.${index}.number`, value);
+                  }
+                }}
+                css={{
+                  color: "white",
+                  font: "inherit",
+                  margin: "5px",
+                  flex: 1,
+                  padding: "5px 2px",
+                  border: "none",
+                  background: "none",
+                  display: "block",
+                  outline: "none",
+                }}
+                placeholder="Phone"
+                aria-label="phone"
+              />
+              {formik.values.phones.length > 1 ? (
+                <button
+                  css={RemovePhoneButton}
+                  onClick={() =>
+                    formik.values.phones.length > 1 && handleRemovePhone(phone)
+                  }
+                >
+                  <AiFillDelete css={ButtonIcon} />
+                </button>
+              ) : (
+                <span />
+              )}
+            </div>
+          ))}
+          <button css={AddPhoneButton} onClick={handleAddPhone}>
+            <span css={ButtonText}>Add Phone Field</span>
+          </button>
+          <Divider />
+        </div>
       </div>
     </div>
   );

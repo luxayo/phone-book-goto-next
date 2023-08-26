@@ -8,9 +8,40 @@ import {
   useGetContactListLazyQuery,
 } from "@api/generated";
 import { useEffect, useState } from "react";
-import StarIcon from "@mui/icons-material/Star";
-import StarOutlineIcon from "@mui/icons-material/StarOutline";
-import DeleteIcon from "@mui/icons-material/Delete";
+import styled from "@emotion/styled";
+import ContactCard from "@components/contact-card.component";
+import { AiFillStar, AiOutlineStar, AiFillDelete } from "react-icons/ai";
+
+export const ContactListContainer = styled.div`
+  background-color: #1c1c1e;
+  color: white;
+  boxs-sizing: border-box;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  max-height: 93vh;
+  max-width: 500px;
+`;
+
+export const Button = styled.button`
+  z-index: 500;
+  background-color: #404040;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s;
+  margin: 8px 0;
+
+  &:hover {
+    background-color: #333333;
+  }
+`;
 
 const Contact = () => {
   const router = useRouter();
@@ -22,8 +53,10 @@ const Contact = () => {
 
   const [removeContact, { loading, error }] = useDeleteContactMutation();
 
-  const [phoneList, setPhoneList] = useState<GetContactListQuery | undefined>();
-  const [phoneFavoriteList, setPhoneFavoriteList] = useState<number[]>([]);
+  const [contactList, setContactList] = useState<
+    GetContactListQuery | undefined
+  >();
+  const [contactFavoriteList, setContactFavoriteList] = useState<number[]>([]);
 
   useEffect(() => {
     if (!localStorage.getItem("phone")) {
@@ -32,12 +65,12 @@ const Contact = () => {
         variables: { limit: limit, offset: offset },
       }).then((response) => {
         localStorage.setItem("phone", JSON.stringify(response.data));
-        setPhoneList(response.data);
+        setContactList(response.data);
       });
     } else {
       console.log("ambil");
       const data = localStorage.getItem("phone");
-      if (data) setPhoneList(JSON.parse(data));
+      if (data) setContactList(JSON.parse(data));
     }
     if (localStorage.getItem("favorite")) {
       const data = localStorage.getItem("favorite");
@@ -45,7 +78,7 @@ const Contact = () => {
         console.log("ambil fav");
         const favorite = JSON.parse(data) as number[];
         console.log(favorite);
-        setPhoneFavoriteList(favorite);
+        setContactFavoriteList(favorite);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -65,12 +98,12 @@ const Contact = () => {
       variables: { limit: limit, offset: offset },
     }).then((response) => {
       if (
-        phoneList !== undefined &&
-        phoneList !== null &&
+        contactList !== undefined &&
+        contactList !== null &&
         response.data !== undefined
       ) {
         const temp = {
-          contact: phoneList.contact
+          contact: contactList.contact
             .concat(response.data.contact)
             .filter(function filterPhones(this: any, { id }) {
               var key = id;
@@ -78,22 +111,22 @@ const Contact = () => {
             }, new Set()),
         };
         localStorage.setItem("phone", JSON.stringify(temp));
-        setPhoneList(temp);
+        setContactList(temp);
       }
     });
   };
 
   const handleAddFavorite = (id: number) => {
-    const favorite = [...phoneFavoriteList];
+    const favorite = [...contactFavoriteList];
     favorite.push(id);
-    setPhoneFavoriteList(favorite);
+    setContactFavoriteList(favorite);
     console.log(favorite);
     localStorage.setItem("favorite", JSON.stringify(favorite));
   };
   const handleRemoveFavorite = (id: number) => {
-    const favorite = phoneFavoriteList;
+    const favorite = contactFavoriteList;
     const filtered = favorite.filter((value) => value !== id);
-    setPhoneFavoriteList(filtered);
+    setContactFavoriteList(filtered);
     console.log(filtered);
     localStorage.setItem("favorite", JSON.stringify(filtered));
   };
@@ -106,22 +139,30 @@ const Contact = () => {
           const phone = JSON.parse(data) as GetContactListQuery;
           const filtered = phone.contact.filter((value) => value.id !== id);
           localStorage.setItem("phone", JSON.stringify({ contact: filtered }));
-          setPhoneList({ contact: filtered });
+          setContactList({ contact: filtered });
         }
       })
       .catch((error) => alert(error.message));
   };
 
-  const renderPhoneNumber = (
+  const contactSearchFilter = (contact: {
+    __typename?: "contact" | undefined;
+    created_at: any;
+    first_name: string;
+    id: number;
+    last_name: string;
     phones: {
       __typename?: "phone" | undefined;
       number: string;
-    }[]
-  ) => {
-    if (phones !== undefined) {
-      return phones.map((number, key) => <div key={key}>{number.number}</div>);
-    }
-    return <span>No Phone Number</span>;
+    }[];
+  }) => {
+    return (
+      contact.first_name.toLowerCase().includes(search) ||
+      contact.last_name.toLowerCase().includes(search) ||
+      (contact.phones !== undefined
+        ? contact.phones.find((number) => number.number.includes(search))
+        : false)
+    );
   };
 
   return (
@@ -133,6 +174,7 @@ const Contact = () => {
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
+        paddingTop: "8px",
       }}
     >
       <div
@@ -140,158 +182,67 @@ const Contact = () => {
           boxSizing: "border-box",
           width: "100%",
           display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
           flexWrap: "wrap",
           flexDirection: "row",
           paddingBottom: "10px",
-          maxWidth: "800px",
+          maxWidth: "500px",
         }}
       >
         <SearchBar onChange={(e) => setSearch(e.target.value)} />
       </div>
-      <div
-        css={{
-          boxSizing: "border-box",
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          overflowY: "auto",
-          maxHeight: "92vh",
-          maxWidth: "800px",
-        }}
-      >
+      <ContactListContainer>
         <p>Favorite</p>
-        {phoneList && phoneFavoriteList.length > 0 ? (
-          phoneList.contact
+        {contactList && contactFavoriteList.length > 0 ? (
+          contactList.contact
             .filter(
-              (phone) =>
-                phoneFavoriteList.includes(phone.id) &&
-                (phone.first_name.toLowerCase().includes(search) ||
-                  phone.last_name.toLowerCase().includes(search) ||
-                  (phone.phones !== undefined
-                    ? phone.phones.find((number) =>
-                        number.number.includes(search)
-                      )
-                    : false))
+              (contact) =>
+                contactFavoriteList.includes(contact.id) &&
+                contactSearchFilter(contact)
             )
-            .map((item, key) => (
-              <div
-                css={{
-                  boxSizing: "border-box",
-                  display: "flex",
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  width: "100%",
-                }}
-                key={key}
-              >
-                <div
-                  css={{
-                    boxSizing: "border-box",
-                    display: "flex",
-                    flex: 1,
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                  }}
-                  onClick={() => handleContactButton(item.id)}
-                >
-                  <div
-                    css={{
-                      boxSizing: "border-box",
-                    }}
-                  >
-                    {item.first_name}
-                  </div>
-                  <div
-                    css={{
-                      boxSizing: "border-box",
-                    }}
-                  >
-                    {renderPhoneNumber(item.phones)}
-                  </div>
-                </div>
-                <button onClick={() => handleRemoveFavorite(item.id)}>
-                  <StarIcon />
-                </button>
-                <button onClick={() => handleDeleteContact(item.id)}>
-                  <DeleteIcon />
-                </button>
-                <Divider />
-              </div>
+            .map((contact, key) => (
+              <ContactCard
+                isFavorite
+                key={contact.id}
+                contact={contact}
+                handleContactButton={handleContactButton}
+                handleAddFavorite={handleAddFavorite}
+                handleDeleteContact={handleDeleteContact}
+                handleRemoveFavorite={handleRemoveFavorite}
+                search={search}
+              />
             ))
         ) : (
           <p> No Favorite Yet :&#40;</p>
         )}
 
         <p>Contact List</p>
-        {phoneList ? (
-          phoneList.contact
+
+        {contactList ? (
+          contactList.contact
             .filter(
-              (phone) =>
-                !phoneFavoriteList.includes(phone.id) &&
-                (phone.first_name.toLowerCase().includes(search) ||
-                  phone.last_name.toLowerCase().includes(search) ||
-                  (phone.phones !== undefined
-                    ? phone.phones.find((number) =>
-                        number.number.includes(search)
-                      )
-                    : false))
+              (contact) =>
+                !contactFavoriteList.includes(contact.id) &&
+                contactSearchFilter(contact)
             )
-            .map((item, key) => (
-              <div
-                css={{
-                  boxSizing: "border-box",
-                  display: "flex",
-                  flexDirection: "row",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  width: "100%",
-                }}
-                key={key}
-              >
-                <div
-                  css={{
-                    boxSizing: "border-box",
-                    display: "flex",
-                    flex: 1,
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                  }}
-                  onClick={() => handleContactButton(item.id)}
-                >
-                  <div
-                    css={{
-                      boxSizing: "border-box",
-                    }}
-                  >
-                    {item.first_name}
-                  </div>
-                  <div
-                    css={{
-                      boxSizing: "border-box",
-                    }}
-                  >
-                    {renderPhoneNumber(item.phones)}
-                  </div>
-                </div>
-                <button onClick={() => handleAddFavorite(item.id)}>
-                  <StarOutlineIcon />
-                </button>
-                <button onClick={() => handleDeleteContact(item.id)}>
-                  <DeleteIcon />
-                </button>
-                <Divider />
-              </div>
+            .map((contact) => (
+              <ContactCard
+                key={contact.id}
+                contact={contact}
+                handleContactButton={handleContactButton}
+                handleAddFavorite={handleAddFavorite}
+                handleDeleteContact={handleDeleteContact}
+                handleRemoveFavorite={handleRemoveFavorite}
+                search={search}
+              />
             ))
         ) : (
-          <p />
+          <p> No Contact Yet :&#40;</p>
         )}
+        <Button onClick={handleLoadMoreButton}>Load More Contact</Button>
+      </ContactListContainer>
 
-        <button onClick={handleLoadMoreButton}>Load More</button>
-      </div>
       <FloatingButton onClick={handleAddContactButton} />
     </div>
   );

@@ -1,4 +1,4 @@
-import AddIcon from "@mui/icons-material/Add";
+import { AiOutlinePlus } from "react-icons/ai";
 import React from "react";
 
 const FloatingButton = (
@@ -13,11 +13,10 @@ const FloatingButton = (
         display: "flex",
         margin: "0 auto",
         marginBottom: "50px",
-        maxWidth: "700px",
+        maxWidth: "450px",
         position: "absolute",
         justifyContent: "flex-end",
         top: "90%",
-        zIndex: "1000",
         width: "85%",
       }}
     >
@@ -25,6 +24,7 @@ const FloatingButton = (
         {...props}
         aria-label="add"
         css={{
+          zIndex: "1000",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -43,10 +43,13 @@ const FloatingButton = (
           boxShadow:
             "0px 3px 5px -1px rgba(0,0,0,0.2), 0px 6px 10px 0px rgba(0,0,0,0.14), 0px 1px 18px 0px rgba(0,0,0,0.12)",
           color: "white",
-          backgroundColor: "black",
+          backgroundColor: "#404040",
+          "&:hover": {
+            backgroundColor: "#333333",
+          },
         }}
       >
-        <AddIcon />
+        <AiOutlinePlus />
       </button>
     </div>
   );

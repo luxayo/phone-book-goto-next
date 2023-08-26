@@ -1,6 +1,5 @@
 import React from "react";
-import SearchIcon from "@mui/icons-material/Search";
-
+import { AiOutlineSearch } from "react-icons/ai";
 const SearchBar = (
   props: React.DetailedHTMLProps<
     React.InputHTMLAttributes<HTMLInputElement>,
@@ -10,18 +9,21 @@ const SearchBar = (
   return (
     <div
       css={{
-        border: "1px solid black",
+        border: "1px solid #404040",
         borderRadius: "10px",
         display: "flex",
         alignItems: "center",
-        width: "100%",
+        width: "80%",
+        maxWidth: "400px",
         padding: "5px 10px",
+        marginRight: "8px",
       }}
     >
-      <SearchIcon css={{ fontSize: "1.2em" }} />
+      <AiOutlineSearch css={{ fontSize: "1.2em" }} />
       <input
         {...props}
         css={{
+          color: "inherit",
           font: "inherit",
           marginRight: "5px",
           flex: 1,
