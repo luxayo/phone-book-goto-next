@@ -16,7 +16,7 @@ const FloatingButton = (
         maxWidth: "450px",
         position: "absolute",
         justifyContent: "flex-end",
-        top: "90%",
+        top: "85%",
         width: "85%",
       }}
     >

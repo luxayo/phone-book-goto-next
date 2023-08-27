@@ -1,75 +1,40 @@
-import { useRouter } from "next/router";
+import { Router, useRouter } from "next/router";
 import Divider from "@components/divider.component";
+import { AiFillDelete } from "react-icons/ai";
 import {
-  AiOutlineCheck,
-  AiOutlineArrowLeft,
-  AiFillDelete,
-} from "react-icons/ai";
-import { useAddContactWithPhonesMutation } from "@api/generated";
-import styled from "@emotion/styled";
+  GetContactListQuery,
+  useAddContactWithPhonesMutation,
+} from "@api/generated";
 import { useFormik } from "formik";
-import { css } from "@emotion/react";
-
-const ContactContainer = css({
-  backgroundColor: "#404040",
-  margin: "8px 0",
-  borderRadius: "12px",
-  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-  width: "100%",
-});
-
-const AddPhoneButton = css({
-  width: "100%",
-  font: "inherit",
-  color: "white",
-  cursor: "pointer",
-  display: "flex",
-  flex: 1,
-  backgroundColor: "#404040",
-  border: "none",
-  padding: "5px 10px",
-  borderTop: "1px solid #333333",
-  borderRadius: "0 0 12px 12px",
-  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-  transition: "background-color 0.3s",
-  alignItems: "center",
-  "&:hover": {
-    backgroundColor: "#333333",
-  },
-});
-
-const RemovePhoneButton = css({
-  font: "inherit",
-  color: "white",
-  cursor: "pointer",
-  display: "flex",
-  backgroundColor: "transparent",
-  border: "none",
-  padding: "5px",
-  borderRadius: "50%",
-  transition: "color 0.2s",
-  alignItems: "center",
-  "&:hover": {
-    color: "#333333",
-  },
-});
-
-const ButtonText = css({
-  fontSize: ".7em",
-  width: "100%",
-  height: "auto",
-  textAlign: "center",
-});
-
-const ButtonIcon = css({
-  fontSize: "1em",
-  textAlign: "center",
-});
+import {
+  AddPhoneButton,
+  BaseContainer,
+  ButtonIcon,
+  ButtonText,
+  ContactContainer,
+  ContactInput,
+  HeaderButton,
+  HeaderButtonText,
+  HeaderContainer,
+  HeaderLeftContainer,
+  HeaderRightContainer,
+  PhoneContainer,
+  PhoneInputContainer,
+  RemovePhoneButton,
+} from "@styles/contact-form.style";
+import { useWarnIfUnsavedChanges } from "@lib/form.lib";
+import { useState } from "react";
+import ConfirmationModal from "@components/confirmation-modal.component";
+import LoadingModal from "@components/loading-modal.component";
 
 const NewContact = () => {
   const router = useRouter();
 
-  const [addContact, { loading }] = useAddContactWithPhonesMutation();
+  const [addContact, { loading, data }] = useAddContactWithPhonesMutation();
+
+  const [confirmationText, setConfirmationText] = useState("");
+  const [confirmationModal, setConfirmationModal] = useState(false);
+  const [isExist, setIsExist] = useState(false);
 
   const formik = useFormik({
     initialValues: {
@@ -78,18 +43,56 @@ const NewContact = () => {
       phones: [{ number: "" }],
     },
     onSubmit: (values) => {
-      const data = values.phones.filter((data) => data.number !== "");
-      addContact({ variables: { ...values, phones: data } })
-        .then((response) => {
-          router.replace(
-            `/contact/${response.data?.insert_contact?.returning[0].id}`
-          );
-        })
-        .catch((error) => {
-          alert(error.message);
-        });
+      const data = localStorage.getItem("contact");
+      let findIndex = -1;
+      if (data) {
+        const contact = JSON.parse(data) as GetContactListQuery;
+        findIndex = contact.contact.findIndex(
+          (item) =>
+            item.first_name.toLowerCase() === values.first_name.toLowerCase() &&
+            item.last_name.toLowerCase() === values.last_name.toLowerCase()
+        );
+      }
+      if (findIndex === -1) {
+        setConfirmationText("Contact Already Exist");
+        setIsExist(true);
+        setConfirmationModal(true);
+      } else {
+        const filtered = values.phones.filter((data) => data.number !== "");
+        addContact({ variables: { ...values, phones: filtered } })
+          .then((response) => {
+            if (data) {
+              const contact = JSON.parse(data) as GetContactListQuery;
+              const date = new Date();
+              contact.contact.push({
+                created_at: date.toISOString(),
+                first_name:
+                  response.data!.insert_contact!.returning[0].first_name,
+                id: response.data!.insert_contact!.returning[0].id,
+                last_name:
+                  response.data!.insert_contact!.returning[0].last_name,
+                phones: response.data!.insert_contact!.returning[0].phones,
+              });
+              localStorage.setItem("contact", JSON.stringify(contact));
+            }
+            setConfirmationText("Contact Successfully Inserted");
+            setConfirmationModal(true);
+          })
+          .catch((error) => {
+            setConfirmationText("Contact Insert Unsuccessful");
+            setConfirmationModal(true);
+          });
+      }
     },
   });
+
+  const handleCloseModal = () => {
+    setConfirmationModal(false);
+    if (!isExist) {
+      router.replace(`/contact/${data?.insert_contact?.returning[0].id}`);
+    }
+    setIsExist(false);
+  };
 
   const handleBackButton = () => {
     router.push("/contact");
@@ -123,198 +126,88 @@ const NewContact = () => {
     return false;
   };
 
+  useWarnIfUnsavedChanges(!formik.isSubmitting && formik.dirty, () => {
+    return confirm("Discard Changes ?");
+  });
+
   return (
-    <div
-      css={{
-        boxSizing: "border-box",
-        display: "flex",
-        width: "100%",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      <div
-        css={{
-          boxSizing: "border-box",
-          width: "100%",
-          display: "flex",
-          flexWrap: "wrap",
-          flexDirection: "row",
-          paddingBottom: "10px",
-          maxWidth: "500px",
-        }}
-      >
-        <div
-          css={{
-            boxSizing: "border-box",
-            display: "flex",
-            flex: 1,
-            flexDirection: "row",
-            justifyContent: "flex-start",
-          }}
-        >
-          <div
-            css={{
-              cursor: "pointer",
-              boxSizing: "border-box",
-            }}
-            onClick={handleBackButton}
-          >
-            <p
-              css={{
-                fontSize: "1em",
-              }}
-            >
-              Close
-            </p>
+    <div css={BaseContainer}>
+      <ConfirmationModal
+        handleConfirm={handleCloseModal}
+        confirmOnly={true}
+        isActive={confirmationModal}
+        text={confirmationText}
+      />
+      <LoadingModal isActive={loading} />
+      <div css={HeaderContainer}>
+        <div css={HeaderLeftContainer}>
+          <div css={HeaderButton(false)} onClick={handleBackButton}>
+            <p css={HeaderButtonText(false)}>Close</p>
           </div>
         </div>
-        <div
-          css={{
-            boxSizing: "border-box",
-            display: "flex",
-            flex: 1,
-            flexDirection: "row",
-            justifyContent: "flex-end",
-          }}
-        >
-          <div
-            css={{
-              cursor: "pointer",
-              boxSizing: "border-box",
-              pointerEvents: isEmpty() ? "none" : "visible",
-            }}
-            onClick={handleSaveButton}
-          >
-            <p
-              css={{
-                fontSize: "1em",
-                color: isEmpty() ? "#404040" : "white",
-              }}
-            >
-              Done
-            </p>
+        <div css={HeaderRightContainer}>
+          <div css={HeaderButton(isEmpty())} onClick={handleSaveButton}>
+            <p css={HeaderButtonText(isEmpty())}>Done</p>
           </div>
         </div>
       </div>
-      <div
-        css={{
-          boxSizing: "border-box",
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          overflowX: "auto",
-          maxWidth: "500px",
-        }}
-      >
-        <div css={ContactContainer}>
-          <div
-            css={{
-              boxSizing: "border-box",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-start",
-            }}
-          >
+      <div css={ContactContainer}>
+        <div css={PhoneContainer}>
+          <div css={PhoneInputContainer}>
             <input
               id="first_name"
               value={formik.values.first_name}
               onChange={(e) => {
                 e.preventDefault();
                 const { value } = e.target;
+                // regex to prevent special character
                 const regex = /[~`!@#$%^&*()_={}'"[\]:;,.<>+\/?-]/;
                 if (!value || !regex.test(value.toString())) {
                   formik.setFieldValue(`first_name`, value);
                 }
               }}
-              css={{
-                color: "white",
-                font: "inherit",
-                margin: "5px",
-                flex: 1,
-                padding: "5px 2px",
-                border: "none",
-                background: "none",
-                display: "block",
-                outline: "none",
-              }}
+              css={ContactInput}
               placeholder="First Name"
               aria-label="first-name"
             />
           </div>
           <Divider />
-          <div
-            css={{
-              boxSizing: "border-box",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-start",
-            }}
-          >
+          <div css={PhoneInputContainer}>
             <input
               id="last_name"
               value={formik.values.last_name}
               onChange={(e) => {
                 e.preventDefault();
                 const { value } = e.target;
+                // regex to prevent special character
                 const regex = /[~`!@#$%^&*()_={}'"[\]:;,.<>+\/?-]/;
                 if (!value || !regex.test(value.toString())) {
                   formik.setFieldValue(`last_name`, value);
                 }
               }}
-              css={{
-                color: "white",
-                font: "inherit",
-                margin: "5px",
-                flex: 1,
-                padding: "5px 2px",
-                border: "none",
-                background: "none",
-                display: "block",
-                outline: "none",
-              }}
+              css={ContactInput}
               placeholder="Last Name"
               aria-label="last-name"
             />
           </div>
-          <Divider />
         </div>
-        <div css={ContactContainer}>
+        <div css={PhoneContainer}>
           {formik.values.phones.map((phone, index) => (
-            <div
-              css={{
-                boxSizing: "border-box",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-start",
-              }}
-              key={index}
-            >
+            <div css={PhoneInputContainer} key={index}>
               <input
                 id={`phones.${index}.number`}
                 value={phone.number}
                 onChange={(e) => {
                   e.preventDefault();
                   const { value } = e.target;
+                  // regex to prevent other than numeric
                   const regex =
                     /^(0*[0-9][0-9]*(\.[0-9]*)?|0*\.[0-9]*[1-9][0-9]*)$/;
                   if (!value || regex.test(value.toString())) {
                     formik.setFieldValue(`phones.${index}.number`, value);
                   }
                 }}
-                css={{
-                  color: "white",
-                  font: "inherit",
-                  margin: "5px",
-                  flex: 1,
-                  padding: "5px 2px",
-                  border: "none",
-                  background: "none",
-                  display: "block",
-                  outline: "none",
-                }}
+                css={ContactInput}
                 placeholder="Phone"
                 aria-label="phone"
               />
@@ -328,14 +221,13 @@ const NewContact = () => {
                   <AiFillDelete css={ButtonIcon} />
                 </button>
               ) : (
-                <span />
+                <></>
               )}
             </div>
           ))}
-          <button css={AddPhoneButton} onClick={handleAddPhone}>
+          <button css={AddPhoneButton(false)} onClick={handleAddPhone}>
             <span css={ButtonText}>Add Phone Field</span>
           </button>
-          <Divider />
         </div>
       </div>
     </div>

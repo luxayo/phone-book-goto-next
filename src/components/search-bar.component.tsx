@@ -1,5 +1,6 @@
 import React from "react";
 import { AiOutlineSearch } from "react-icons/ai";
+
 const SearchBar = (
   props: React.DetailedHTMLProps<
     React.InputHTMLAttributes<HTMLInputElement>,
@@ -25,7 +26,8 @@ const SearchBar = (
         css={{
           color: "inherit",
           font: "inherit",
-          marginRight: "5px",
+          marginRight: "2.5px",
+          marginLeft: "2.5px",
           flex: 1,
           padding: "5px 2px",
           border: "none",

@@ -1,29 +1,37 @@
-import React from "react";
-import styled from "@emotion/styled";
-import { AiFillStar, AiOutlineStar, AiFillDelete } from "react-icons/ai";
 import { css } from "@emotion/react";
 
-export const ContactCardContainer = styled.div`
-  z-index: 500;
-  background-color: #404040;
-  margin: 8px;
-  border-radius: 12px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: 80%;
-  max-width: 400px;
-`;
+const ContactCardContainer = css({
+  zIndex: "500",
+  backgroundColor: "#404040",
+  margin: "8px",
+  borderRadius: "12px",
+  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+  width: "80%",
+  maxWidth: "400px",
+});
 
-export const ContactName = css({
+const ContactContainer = css({
+  cursor: "pointer",
+  padding: "16px",
+  borderRadius: "12px 12px 0 0",
+  "&:hover": {
+    backgroundColor: "#333333",
+  },
+});
+
+const ContactName = css({
   fontSize: "18px",
   marginBottom: "8px",
 });
-export const ContactPhone = css({ color: "#cccccc" });
+
+const ContactPhone = css({ color: "#cccccc" });
 
 const RemoveButton = css({
   font: "inherit",
   color: "white",
   cursor: "pointer",
   display: "flex",
+  alignItems: "center",
   flex: 1,
   backgroundColor: "#404040",
   border: "none",
@@ -32,7 +40,6 @@ const RemoveButton = css({
   borderRadius: "0 0 12px 0",
   boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
   transition: "background-color 0.3s",
-  alignItems: "center",
   "&:hover": {
     backgroundColor: "#333333",
   },
@@ -43,6 +50,7 @@ const FavoriteButton = css({
   color: "white",
   cursor: "pointer",
   display: "flex",
+  alignItems: "center",
   flex: 3,
   backgroundColor: "#404040",
   border: "none",
@@ -96,10 +104,10 @@ const ContactCard = (props: Props) => {
         return <p css={ContactPhone}>{phones[0].number}</p>;
       }
       return phones
-        .filter((number) => number.number.includes(props.search))
-        .map((number, key) => (
+        .filter((phone) => phone.number.includes(props.search))
+        .map((phone, key) => (
           <p css={ContactPhone} key={key}>
-            {number.number}
+            {phone.number}
           </p>
         ));
     }
@@ -107,16 +115,13 @@ const ContactCard = (props: Props) => {
   };
 
   return (
-    <ContactCardContainer>
+    <div
+      key={props.contact.id}
+      id={`card-container-${props.contact.id}`}
+      css={ContactCardContainer}
+    >
       <div
-        css={{
-          cursor: "pointer",
-          padding: "16px",
-          borderRadius: "12px 12px 0 0",
-          "&:hover": {
-            backgroundColor: "#333333",
-          },
-        }}
+        css={ContactContainer}
         onClick={() => props.handleContactButton(props.contact.id)}
       >
         <h3 css={ContactName}>
@@ -126,6 +131,8 @@ const ContactCard = (props: Props) => {
       </div>
       <div css={{ display: "flex" }}>
         <button
+          key={props.contact.id}
+          id={`card-fav-button-${props.contact.id}`}
           css={FavoriteButton}
           onClick={() => {
             props.isFavorite
@@ -140,13 +147,14 @@ const ContactCard = (props: Props) => {
           )}
         </button>
         <button
+          id={`card-delete-button-${props.contact.id}`}
           css={RemoveButton}
           onClick={() => props.handleDeleteContact(props.contact.id)}
         >
           <span css={ButtonText}>Delete Contact</span>
         </button>
       </div>
-    </ContactCardContainer>
+    </div>
   );
 };
 

@@ -24,23 +24,29 @@ export default function App({ Component, pageProps }: AppProps) {
               "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
               "Helvetica Neue", sans-serif;
             background-color: #1c1c1e;
-            color: #ffffff;
-            ::-webkit-scrollbar {
-              width: 8px;
-            }
+            color: white;
+          }
 
-            ::-webkit-scrollbar-track {
-              background: #1c1c1e;
-            }
+          *::-webkit-scrollbar {
+            width: 8px;
+          }
 
-            ::-webkit-scrollbar-thumb {
-              background: #888;
-              border-radius: 10px;
-            }
+          *::-webkit-scrollbar-track {
+            background: #1c1c1e;
+          }
 
-            ::-webkit-scrollbar-thumb:hover {
-              background: #555;
-            }
+          *::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+          }
+
+          *::-webkit-scrollbar-thumb:hover {
+            background: #555;
+          }
+
+          * {
+            scrollbar-width: thin;
+            scrollbar-color: #888 #1c1c1e;
           }
         `}</style>
         <Component {...pageProps} />

@@ -1,4 +1,13 @@
 import {
+  AddPhoneButton,
+  ButtonText,
+  ContactInput,
+  ModalContainer,
+  PhoneInputContainer,
+  PhoneModalButton,
+  PhoneModalContainer,
+} from "@styles/contact-form.style";
+import {
   GetContactListQuery,
   useAddNumberToContactMutation,
 } from "@api/generated";
@@ -7,11 +16,12 @@ import React, { useState } from "react";
 type Props = {
   isActive: boolean;
   setIsActive: React.Dispatch<React.SetStateAction<boolean>>;
+  setSubmitting: (isSubmitting: boolean) => void;
   id: number;
   setValue: any;
 };
 
-const PhoneNumberAdd = (props: Props) => {
+const AddPhoneNumberModal = (props: Props) => {
   const [PhoneNumberAdd, setPhoneNumberAdd] = useState("");
   const [addPhoneNumber, { loading }] = useAddNumberToContactMutation();
   const handlePhoneNumberAdd = () => {
@@ -22,7 +32,7 @@ const PhoneNumberAdd = (props: Props) => {
       },
     })
       .then((response) => {
-        const data = localStorage.getItem("phone");
+        const data = localStorage.getItem("contact");
         if (response.data !== undefined) {
           props.setValue({
             first_name:
@@ -46,7 +56,8 @@ const PhoneNumberAdd = (props: Props) => {
               phones: response.data!.insert_phone!.returning[0].contact!.phones,
             };
 
-            localStorage.setItem("phone", JSON.stringify(parsed));
+            localStorage.setItem("contact", JSON.stringify(parsed));
+            props.setSubmitting(true);
           }
         }
 
@@ -56,45 +67,43 @@ const PhoneNumberAdd = (props: Props) => {
         alert(error.message);
       });
   };
+
   const handleClose = () => {
     props.setIsActive(false);
   };
+
   return (
-    <div
-      css={{
-        display: "flex",
-        position: "fixed",
-        alignItems: "center",
-        justifyContent: "center",
-        inset: "0px",
-        backgroundColor: "rgba(0,0,0,0.5)",
-        color: "rgba(255,255,255)",
-        zIndex: "1200",
-        visibility: props.isActive ? "visible" : "hidden",
-      }}
-    >
-      <div
-        css={{
-          boxSizing: "border-box",
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          overflowX: "auto",
-          maxWidth: "300px",
-          backgroundColor: "white",
-          color: "black",
-        }}
-      >
-        <input
-          value={PhoneNumberAdd}
-          onChange={(e) => setPhoneNumberAdd(e.target.value)}
-        />
-        <button onClick={handlePhoneNumberAdd}>Add Phone Number</button>
-        <button onClick={handleClose}>Cancel</button>
+    <div css={ModalContainer(props.isActive)}>
+      <div css={PhoneModalContainer}>
+        <div css={PhoneInputContainer}>
+          <input
+            value={PhoneNumberAdd}
+            onChange={(e) => {
+              e.preventDefault();
+              const { value } = e.target;
+              const regex =
+                /^(0*[0-9][0-9]*(\.[0-9]*)?|0*\.[0-9]*[1-9][0-9]*)$/;
+              if (!value || regex.test(value.toString())) {
+                setPhoneNumberAdd(value);
+              }
+            }}
+            css={ContactInput}
+            placeholder="Phone"
+            aria-label="phone"
+          />
+        </div>
+        <button css={AddPhoneButton(false)} onClick={handlePhoneNumberAdd}>
+          <span css={ButtonText}>Add Phone Number</span>
+        </button>
+      </div>
+
+      <div css={PhoneModalContainer}>
+        <button css={PhoneModalButton} onClick={handleClose}>
+          <span css={ButtonText}>Cancel</span>
+        </button>
       </div>
     </div>
   );
 };
 
-export default PhoneNumberAdd;
+export default AddPhoneNumberModal;
