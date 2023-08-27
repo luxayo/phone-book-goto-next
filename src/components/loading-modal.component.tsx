@@ -1,6 +1,5 @@
 import { keyframes } from "@emotion/react";
 import { ModalContainer } from "@styles/contact-form.style";
-import { AiOutlineLoading } from "react-icons/ai";
 
 type Props = {
   isActive: boolean;
