@@ -53,7 +53,7 @@ const NewContact = () => {
             item.last_name.toLowerCase() === values.last_name.toLowerCase()
         );
       }
-      if (findIndex === -1) {
+      if (findIndex !== -1) {
         setConfirmationText("Contact Already Exist");
         setIsExist(true);
         setConfirmationModal(true);
@@ -112,7 +112,6 @@ const NewContact = () => {
       "phones",
       formik.values.phones.filter((data) => data !== phone)
     );
-    console.log(formik.values.phones.length);
   };
 
   const isEmpty = () => {

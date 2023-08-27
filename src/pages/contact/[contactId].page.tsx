@@ -42,6 +42,7 @@ const ContactDetail = () => {
 
   const [confirmationText, setConfirmationText] = useState("");
   const [confirmationModal, setConfirmationModal] = useState(false);
+  const [isExist, setIsExist] = useState(false);
 
   const [phoneInitialValues, setphoneInitialValues] = useState({
     first_name: "",
@@ -103,56 +104,71 @@ const ContactDetail = () => {
     initialValues: phoneInitialValues,
     enableReinitialize: true,
     onSubmit: (values) => {
-      if (
-        values.first_name !== formik.initialValues.first_name ||
-        values.last_name !== formik.initialValues.last_name
-      ) {
-        editContact({
-          variables: {
-            id: parsedContactId,
-            _set: {
-              first_name: formik.touched.first_name
-                ? values.first_name
-                : undefined,
-              last_name: formik.touched.last_name
-                ? values.last_name
-                : undefined,
-            },
-          },
-        })
-          .then((response) => {
-            const data = localStorage.getItem("contact");
-            if (data) {
-              const contact = JSON.parse(data) as GetContactListQuery;
-              const index = contact.contact.findIndex(
-                (contact) =>
-                  contact.id === response.data!.update_contact_by_pk!.id
-              );
-              contact.contact[index].first_name =
-                response.data!.update_contact_by_pk!.first_name;
-              contact.contact[index].last_name =
-                response.data!.update_contact_by_pk!.last_name;
-              localStorage.setItem("contact", JSON.stringify(contact));
-            }
-            setConfirmationText("Contact Successfully Updated");
-            setConfirmationModal(true);
-          })
-          .catch((error) => {
-            setConfirmationText("Contact Update Unsuccessful");
-            setConfirmationModal(true);
-          });
+      const data = localStorage.getItem("contact");
+      let findIndex = -1;
+      if (data) {
+        const contact = JSON.parse(data) as GetContactListQuery;
+        findIndex = contact.contact.findIndex(
+          (item) =>
+            item.first_name.toLowerCase() === values.first_name.toLowerCase() &&
+            item.last_name.toLowerCase() === values.last_name.toLowerCase()
+        );
       }
+      if (findIndex !== -1) {
+        setConfirmationText("Contact Already Exist");
+        setIsExist(true);
+        setConfirmationModal(true);
+      } else {
+        if (
+          values.first_name !== formik.initialValues.first_name ||
+          values.last_name !== formik.initialValues.last_name
+        ) {
+          editContact({
+            variables: {
+              id: parsedContactId,
+              _set: {
+                first_name: formik.touched.first_name
+                  ? values.first_name
+                  : undefined,
+                last_name: formik.touched.last_name
+                  ? values.last_name
+                  : undefined,
+              },
+            },
+          })
+            .then((response) => {
+              if (data) {
+                const contact = JSON.parse(data) as GetContactListQuery;
+                const index = contact.contact.findIndex(
+                  (contact) =>
+                    contact.id === response.data!.update_contact_by_pk!.id
+                );
+                contact.contact[index].first_name =
+                  response.data!.update_contact_by_pk!.first_name;
+                contact.contact[index].last_name =
+                  response.data!.update_contact_by_pk!.last_name;
+                localStorage.setItem("contact", JSON.stringify(contact));
+              }
+              setConfirmationText("Contact Successfully Updated");
+              setConfirmationModal(true);
+            })
+            .catch((error) => {
+              setConfirmationText("Contact Update Unsuccessful");
+              setConfirmationModal(true);
+            });
+        }
 
-      if (formik.touched.phones) {
-        for (let index = 0; index < values.phones.length; index++) {
-          if (
-            values.phones[index].number !==
-            formik.initialValues.phones[index].number
-          )
-            handleSavePhoneNumber(
-              values.phones[index].number,
+        if (formik.touched.phones) {
+          for (let index = 0; index < values.phones.length; index++) {
+            if (
+              values.phones[index].number !==
               formik.initialValues.phones[index].number
-            );
+            )
+              handleSavePhoneNumber(
+                values.phones[index].number,
+                formik.initialValues.phones[index].number
+              );
+          }
         }
       }
     },
@@ -188,6 +204,7 @@ const ContactDetail = () => {
   useWarnIfUnsavedChanges(!formik.isSubmitting && formik.dirty, () => {
     return confirm("Discard Changes ?");
   });
+
   if (loadingGetContact) {
     return <LoadingModal isActive />;
   }
