@@ -236,7 +236,7 @@ const Contact = () => {
         <SearchBar onChange={(e) => setSearch(e.target.value.toLowerCase())} />
       </div>
       <div css={ContactListContainer}>
-        <h6>Favorite</h6>
+        <h3>Favorite</h3>
         {contactList && contactFavoriteList.length > 0 ? (
           contactList.contact
             .filter(
@@ -260,7 +260,7 @@ const Contact = () => {
           <p>No Favorite Yet :&#40;</p>
         )}
 
-        <h6>Contact List</h6>
+        <h3>Contact List</h3>
 
         {contactList ? (
           contactList.contact
