@@ -145,7 +145,11 @@ const NewContact = () => {
           </div>
         </div>
         <div css={HeaderRightContainer}>
-          <div css={HeaderButton(isEmpty())} onClick={handleSaveButton}>
+          <div
+            data-testid="done-button"
+            css={HeaderButton(isEmpty())}
+            onClick={handleSaveButton}
+          >
             <p css={HeaderButtonText(isEmpty())}>Done</p>
           </div>
         </div>
@@ -168,6 +172,7 @@ const NewContact = () => {
               css={ContactInput}
               placeholder="First Name"
               aria-label="first-name"
+              data-testid="first-name"
             />
           </div>
           <Divider />
@@ -187,6 +192,7 @@ const NewContact = () => {
               css={ContactInput}
               placeholder="Last Name"
               aria-label="last-name"
+              data-testid="last-name"
             />
           </div>
         </div>
@@ -209,6 +215,7 @@ const NewContact = () => {
                 css={ContactInput}
                 placeholder="Phone"
                 aria-label="phone"
+                data-testid="phone"
               />
               {formik.values.phones.length > 1 ? (
                 <button
@@ -216,6 +223,7 @@ const NewContact = () => {
                   onClick={() =>
                     formik.values.phones.length > 1 && handleRemovePhone(phone)
                   }
+                  data-testid={`delete-phone`}
                 >
                   <AiFillDelete css={ButtonIcon} />
                 </button>
@@ -224,7 +232,11 @@ const NewContact = () => {
               )}
             </div>
           ))}
-          <button css={AddPhoneButton(false)} onClick={handleAddPhone}>
+          <button
+            css={AddPhoneButton(false)}
+            onClick={handleAddPhone}
+            data-testid="add-phone"
+          >
             <span css={ButtonText}>Add Phone Field</span>
           </button>
         </div>

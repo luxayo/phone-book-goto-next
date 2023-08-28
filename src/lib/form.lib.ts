@@ -20,5 +20,6 @@ export const useWarnIfUnsavedChanges = (
         Router.events.off("routeChangeStart", routeChangeStart);
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unsavedChanges]);
 };

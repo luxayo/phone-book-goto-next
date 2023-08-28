@@ -236,7 +236,7 @@ const Contact = () => {
         <SearchBar onChange={(e) => setSearch(e.target.value.toLowerCase())} />
       </div>
       <div css={ContactListContainer}>
-        <p>Favorite</p>
+        <h6>Favorite</h6>
         {contactList && contactFavoriteList.length > 0 ? (
           contactList.contact
             .filter(
@@ -260,7 +260,7 @@ const Contact = () => {
           <p>No Favorite Yet :&#40;</p>
         )}
 
-        <p>Contact List</p>
+        <h6>Contact List</h6>
 
         {contactList ? (
           contactList.contact
@@ -283,7 +283,11 @@ const Contact = () => {
         ) : (
           <p>No Contact Yet :&#40;</p>
         )}
-        <button css={LoadButton} onClick={handleLoadMoreButton}>
+        <button
+          data-testid="load-more"
+          css={LoadButton}
+          onClick={handleLoadMoreButton}
+        >
           Load More Contact
         </button>
       </div>

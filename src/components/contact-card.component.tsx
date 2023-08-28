@@ -118,6 +118,7 @@ const ContactCard = (props: Props) => {
     <div
       key={props.contact.id}
       id={`card-container-${props.contact.id}`}
+      data-testid={"card-container"}
       css={ContactCardContainer}
     >
       <div

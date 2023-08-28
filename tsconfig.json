@@ -22,6 +22,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "__test__/snapshot.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "__test__/snapshot.tsx"],
   "exclude": ["node_modules"]
 }
